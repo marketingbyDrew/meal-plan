@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Meal Plan</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#F7F3EC;color:#1E1C1A;min-height:100vh}
+button{cursor:pointer;font-family:inherit}
+.hero{background:#3D2B1F;color:#FDFAF5;padding:40px 24px 32px;text-align:center}
+.hero-eye{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#F0A070;margin-bottom:10px}
+.hero h1{font-size:clamp(24px,5vw,42px);font-weight:300;line-height:1.1;margin-bottom:10px;font-style:italic}
+.hero p{font-size:13px;color:#C8B8A8;max-width:360px;margin:0 auto 20px}
+.progress-wrap{max-width:320px;margin:0 auto}
+.progress-labels{display:flex;justify-content:space-between;font-size:11px;color:#C8B8A8;margin-bottom:6px}
+.progress-bar{background:rgba(255,255,255,.15);border-radius:20px;height:6px;overflow:hidden}
+.progress-fill{background:#F0A070;height:100%;border-radius:20px;transition:width .4s ease}
+.tabs{background:#FDFAF5;border-bottom:1px solid #D8CFC4;display:flex;overflow-x:auto;position:sticky;top:0;z-index:100;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:12px 16px;font-size:13px;font-weight:500;background:none;border:none;border-bottom:2px solid transparent;color:#4A3F38;white-space:nowrap;transition:color .2s,border-color .2s}
+.tab.active{color:#B85220;border-bottom-color:#B85220}
+.content{max-width:700px;margin:0 auto;padding:28px 16px 80px}
+.section{display:none}.section.active{display:block}
+h2{font-size:22px;font-weight:700;color:#3D2B1F;margin-bottom:4px}
+.sub{font-size:13px;color:#4A3F38;margin-bottom:20px}
+.dinner-list{display:flex;flex-direction:column;gap:10px}
+.dinner-card{background:#FDFAF5;border:1px solid #D8CFC4;border-radius:10px;padding:13px 15px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;cursor:pointer;user-select:none;transition:opacity .2s}
+.dinner-card.done{opacity:.5;background:#EDE8E0}
+.dinner-day{font-size:11px;font-weight:700;color:#B85220;text-transform:uppercase;letter-spacing:.06em;text-align:center}
+.dinner-date{font-size:10px;color:#9A8E88;text-align:center}
+.dinner-meal{font-size:14px;font-weight:600;color:#1E1C1A;margin-bottom:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.dinner-card.done .dinner-meal{text-decoration:line-through}
+.dinner-card.done .dinner-day{color:#9A8E88}
+.dinner-note{font-size:12px;color:#5C4F45}
+.badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;color:#fff}
+.badge-bbq{background:#B85220}
+.badge-out{background:#3A6B42}
+.badge-done{font-size:11px;color:#9A8E88;font-weight:400}
+.effort{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border-radius:20px;white-space:nowrap;color:#fff}
+.effort-easy{background:#2D6E3A}
+.effort-medium{background:#A04F00}
+.effort-zero{background:#4A3F38}
+.reset-btn{margin-top:24px;font-size:12px;color:#9A8E88;background:none;border:1px solid #D8CFC4;border-radius:8px;padding:8px 16px;display:block;width:100%}
+.lunch-group{margin-bottom:24px}
+.lunch-group h3{font-size:15px;font-weight:700;color:#3D2B1F;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #D8CFC4}
+.lunch-item{background:#FDFAF5;border:1px solid #D8CFC4;border-radius:8px;padding:10px 13px;font-size:13px;color:#1E1C1A;display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.dot{width:6px;height:6px;border-radius:50%;background:#B85220;flex-shrink:0}
+.tip-card{background:#FDFAF5;border:1px solid #D8CFC4;border-left:3px solid #B85220;border-radius:8px;padding:13px 14px;margin-bottom:10px}
+.tip-card h4{font-size:13px;font-weight:700;color:#3D2B1F;margin-bottom:4px}
+.tip-card p{font-size:13px;color:#3A3028;line-height:1.5;margin:0}
+.store-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.store-tag{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:20px;color:#fff}
+.store-note{font-size:12px;color:#4A3F38;font-style:italic}
+.cat-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#4A3F38;margin:10px 0 6px}
+.item-group{background:#FDFAF5;border:1px solid #D8CFC4;border-radius:8px;padding:4px 12px;margin-bottom:8px}
+.check-row{display:flex;align-items:center;gap:10px;padding:7px 0;cursor:pointer;user-select:none;border-bottom:1px solid #F0EBE4}
+.check-row:last-child{border-bottom:none}
+.check-row span{font-size:13px;color:#1E1C1A;transition:all .15s}
+.check-row.checked span{color:#9A8E88;text-decoration:line-through}
+.checkbox{width:17px;height:17px;border-radius:4px;flex-shrink:0;border:1.5px solid #C8BFB5;background:transparent;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.checkbox.checked{border:none}
+.checkbox.checked::after{content:'✓';color:#fff;font-size:11px;font-weight:800;line-height:1}
+.budget-row{display:flex;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #D8CFC4;font-size:13px;color:#1E1C1A}
+.budget-row.total{font-size:14px;font-weight:700;color:#3D2B1F;border-bottom:none}
+.daily-card{background:#FDFAF5;border:1px solid #D8CFC4;border-radius:10px;overflow:hidden;margin-bottom:12px}
+.daily-card.highlight{border-width:2px}
+.daily-header{padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+.daily-header-day{font-size:13px;font-weight:700;color:#fff}
+.daily-header-store{font-size:11px;color:rgba(255,255,255,.85);margin-top:2px}
+.daily-done-badge{font-size:11px;font-weight:700;background:rgba(255,255,255,.25);color:#fff;padding:3px 8px;border-radius:20px}
+.daily-body{padding:8px 14px}
+.daily-note{font-size:12px;color:#4A3F38;margin:8px 0 4px;font-style:italic}
+hr{border:none;border-top:1px solid #D8CFC4;margin:20px 0}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <p class="hero-eye">Friday July 4 - Friday July 11</p>
+  <h1>Built around what actually works.</h1>
+  <p>Beyond burgers, scotch bap Sammies, BBQ nights, air fryer fries. Simple and consistent.</p>
+  <div class="progress-wrap">
+    <div class="progress-labels">
+      <span id="progress-text">0 of 8 nights done</span>
+      <span id="progress-pct">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('dinners',this)">This Week</button>
+  <button class="tab" onclick="showTab('lunches',this)">Lunches</button>
+  <button class="tab" onclick="showTab('shopping',this)">Shopping</button>
+  <button class="tab" onclick="showTab('daily',this)">Daily Shop</button>
+  <button class="tab" onclick="showTab('airfryer',this)">Air Fryer</button>
+  <button class="tab" onclick="showTab('tips',this)">Tips</button>
+</div>
+
+<div class="content">
+
+  <!-- THIS WEEK -->
+  <div class="section active" id="dinners">
+    <h2>This Week</h2>
+    <p class="sub">Tap a night to mark it done. Saves automatically.</p>
+    <div class="dinner-list" id="dinner-list"></div>
+    <button class="reset-btn" onclick="resetAll()">Reset all progress</button>
+  </div>
+
+  <!-- LUNCHES -->
+  <div class="section" id="lunches">
+    <h2>Lunch Rotation</h2>
+    <p class="sub">All on the panini press. Scotch bap for Sammies only. Under 10 min.</p>
+    <div class="lunch-group">
+      <h3>Sammies on Scotch Bap Rolls</h3>
+      <div class="lunch-item"><div class="dot"></div>Sammy Meats + mozzarella + butter on scotch bap</div>
+      <div class="lunch-item"><div class="dot"></div>Sammy Meats + mozzarella + whatever sauce you have on scotch bap</div>
+    </div>
+    <div class="lunch-group">
+      <h3>Quesadillas</h3>
+      <div class="lunch-item"><div class="dot"></div>Plain mozzarella quesadilla - wifey's favourite, zero effort</div>
+    </div>
+    <div class="tip-card">
+      <h4>Scotch bap tip</h4>
+      <p>Toast the cut side on the panini press for 30-60 seconds before adding fillings. Stops it going soggy and adds a bit of crunch.</p>
+    </div>
+    <div class="tip-card" style="margin-top:10px">
+      <h4>What you need to buy</h4>
+      <p>Just Sammy Meats (1-2 packs) and soft flour tortillas. Everything else - scotch baps, butter, mozzarella, sauces - already have it.</p>
+    </div>
+  </div>
+
+  <!-- SHOPPING -->
+  <div class="section" id="shopping">
+    <h2>Shopping List</h2>
+    <p class="sub">Tap to check off as you shop. Saves automatically.</p>
+    <div id="shopping-list"></div>
+    <hr>
+    <h3 style="font-size:18px;font-weight:700;color:#3D2B1F;margin-bottom:12px">Estimated Budget</h3>
+    <div class="budget-row"><span>Vince's</span><span>$35-55 CAD</span></div>
+    <div class="budget-row"><span>Metro</span><span>$15-25 CAD</span></div>
+    <div class="budget-row"><span>Ranch</span><span>$15-20 CAD</span></div>
+    <div class="budget-row"><span>Costco</span><span>$40-60 CAD (pantry run, amortized)</span></div>
+    <div class="budget-row total"><span>Total</span><span>$105-160 CAD</span></div>
+  </div>
+
+  <!-- DAILY SHOP -->
+  <div class="section" id="daily">
+    <h2>Daily Shopping</h2>
+    <p class="sub">What to grab and when. Small local runs only.</p>
+    <div id="daily-list"></div>
+  </div>
+
+  <!-- AIR FRYER -->
+  <div class="section" id="airfryer">
+    <h2>Air Fryer Guide</h2>
+    <p class="sub">Stop forgetting this thing exists. Frozen fries every BBQ night minimum.</p>
+    <div class="tip-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;flex-wrap:wrap;gap:6px"><h4>Frozen Fries</h4><span class="badge badge-bbq" style="font-size:11px;padding:3px 9px;border-radius:20px">18-22 min at 400F</span></div><p>Shake halfway through. Don't overcrowd or they go soggy. Salt right when they come out.</p></div>
+    <div class="tip-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;flex-wrap:wrap;gap:6px"><h4>Reheating Leftovers</h4><span class="badge badge-bbq" style="font-size:11px;padding:3px 9px;border-radius:20px">3-5 min at 350F</span></div><p>Way better than microwave for burgers and skewers. Keeps the texture right.</p></div>
+    <div class="tip-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;flex-wrap:wrap;gap:6px"><h4>Garlic Bread</h4><span class="badge badge-bbq" style="font-size:11px;padding:3px 9px;border-radius:20px">4-5 min at 375F</span></div><p>Butter, garlic, any bread you have. Great quick side for pasta night.</p></div>
+    <div class="tip-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;flex-wrap:wrap;gap:6px"><h4>Frozen Onion Rings</h4><span class="badge badge-bbq" style="font-size:11px;padding:3px 9px;border-radius:20px">8-10 min at 400F</span></div><p>Grab a bag at Costco. Flip halfway. Great swap when fries get repetitive.</p></div>
+    <div class="tip-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;flex-wrap:wrap;gap:6px"><h4>Frozen Veggie Sides</h4><span class="badge badge-bbq" style="font-size:11px;padding:3px 9px;border-radius:20px">10-12 min at 380F</span></div><p>Toss frozen veg in olive oil and seasoning first. Easy side on any night.</p></div>
+  </div>
+
+  <!-- TIPS -->
+  <div class="section" id="tips">
+    <h2>Tips</h2>
+    <p class="sub">Built around what actually works for both of you.</p>
+    <div class="tip-card"><h4>Beyond patties on the BBQ - keep them cold</h4><p>Form them straight from the fridge, press a small indent in the middle so they don't puff up. Medium-high heat, 3-4 min per side. Mozzarella on last minute with lid closed to melt.</p></div>
+    <div class="tip-card"><h4>Gold buns - toast them on the BBQ</h4><p>Cut side down on the grill for 30-60 seconds while the patties rest. Adds crunch and stops the bun going soggy from the burger.</p></div>
+    <div class="tip-card"><h4>Mozzarella block vs pre-shredded</h4><p>Slicing fresh from the block melts way better on burgers and paninis. Pre-shredded has a coating that stops it melting as cleanly.</p></div>
+    <div class="tip-card"><h4>Scotch bap rolls - for Sammies only</h4><p>Toast the cut side on the panini press for 30-60 seconds before adding fillings. Stops it going soggy. Gold buns are for burgers only.</p></div>
+    <div class="tip-card"><h4>Tomato cream pasta - sauce tips</h4><p>Saute garlic in butter first, add canned tomatoes and simmer 5 min, then stir in heavy cream off the heat. Toss with pasta and parmesan. Penne or rigatoni holds the sauce best.</p></div>
+  </div>
+
+</div>
+
+<script>
+const DINNERS = [
+  {id:1,day:"Friday",date:"Today",meal:"Eat Out",note:"Reset night - no cooking, no dishes.",effort:"Zero"},
+  {id:2,day:"Saturday",date:"Tomorrow",meal:"BBQ Beyond Burgers",note:"Last 2 from previous box. Gold buns, mozzarella, condiments your way. Air fryer fries.",effort:"Easy",bbq:true},
+  {id:3,day:"Sunday",date:"",meal:"BBQ Deli Skewers",note:"Pre-made skewers from Vince's or Metro deli. Zero prep. Air fryer fries on the side.",effort:"Zero",bbq:true},
+  {id:4,day:"Monday",date:"",meal:"BBQ Beyond Burgers",note:"New box, round 1. Gold buns, mozzarella, air fryer fries.",effort:"Easy",bbq:true},
+  {id:5,day:"Tuesday",date:"",meal:"Ghost Taco - Eat Out",note:"Taco Tuesday deal - 3 tacos + 1 free, around $30 for both of you. No cooking, no dishes.",effort:"Zero",eatin:true},
+  {id:6,day:"Wednesday",date:"",meal:"BBQ Beyond Burgers",note:"New box, round 2. Gold buns, mozzarella, air fryer fries.",effort:"Easy",bbq:true},
+  {id:7,day:"Thursday",date:"",meal:"Tomato Cream Pasta",note:"Pasta, canned tomatoes, leftover heavy cream, garlic, butter, parmesan. Wifey's sauce. 20 min.",effort:"Easy"},
+  {id:8,day:"Friday",date:"Next Friday",meal:"BBQ Beyond Burgers",note:"New box, round 3. Full box done across the week. Gold buns, mozzarella, air fryer fries.",effort:"Easy",bbq:true},
+];
+
+const SHOPPING_DATA = [
+  {store:"Vince's Market",color:"#3D2B1F",note:"Primary protein stop - right next door",cats:[
+    {label:"Proteins - buy as needed",items:["Beyond Beef patties box of 6","Ground beef 1lb","Pre-made deli skewers (for Sunday)"]},
+    {label:"Lunch",items:["Sammy Meats (1-2 packs - roast beef or salami)","Soft flour tortillas (small pack)"]},
+    {label:"Other",items:["Mozzarella block","Scotch bap rolls","Gold burger buns"]},
+  ]},
+  {store:"Metro",color:"#4A3F38",note:"Backup and gap fill",cats:[
+    {label:"If Vince's is out",items:["Sammy Meats roast beef or salami","Beyond Beef patties","Scotch bap rolls","Gold burger buns","Canned crushed tomatoes","Dijon mustard","Pickles / jalapenos"]},
+  ]},
+  {store:"Ranch Supermarket",color:"#3A6B42",note:"Cheap produce - go here first",cats:[
+    {label:"Produce",items:["Garlic bulbs","Lemons","Tomatoes","Bell peppers","Onions"]},
+    {label:"Pantry",items:["Sriracha or chili garlic sauce","Sesame oil","Soy sauce (if out)"]},
+  ]},
+  {store:"Costco",color:"#B85220",note:"Non-perishables only",cats:[
+    {label:"Dairy and Pantry",items:["Heavy cream","Butter","Parmesan block","Sour cream","Mayo","BBQ sauce","Olive oil large jug","Frozen fries large bag","Frozen peas / corn mix"]},
+  ]},
+];
+
+const DAILY_DATA = [
+  {day:"Saturday - Beyond Burgers",color:"#B85220",highlight:true,store:"Already have it",items:["Last 2 Beyond patties from old box","Gold buns (2 left in fridge)","Mozzarella (if out)"],note:"Use up what you have tonight."},
+  {day:"Sunday - Deli Skewers",color:"#3D2B1F",store:"Vince's or Metro deli",items:["Pre-made deli skewers - grab whatever looks good"],note:"Zero prep. Throw them on the grill, fries in the air fryer. Done."},
+  {day:"Monday - Beyond Burgers",color:"#3D2B1F",store:"Vince's",items:["Beyond Beef box of 6 (new box)","Gold burger buns (fresh pack)"],note:"This box covers Monday, Wednesday and next Friday."},
+  {day:"Tuesday - Ghost Taco",color:"#4A3F38",store:"Eat out",items:["Taco Tuesday deal - 3 tacos + 1 free","Around $30 total for both of you"],note:"Zero prep, zero dishes. Best deal of the week."},
+  {day:"Wednesday - Beyond Burgers",color:"#3A6B42",store:"Already have it",items:["Beyond patties round 2 from Monday's box","Gold buns (from Monday's pack)"],note:"Everything already in the fridge from Monday."},
+  {day:"Thursday - Tomato Cream Pasta",color:"#3A6B42",store:"Metro or already have it",items:["Pasta - penne or rigatoni","Canned crushed tomatoes","Parmesan (if out)"],note:"Heavy cream, butter and garlic already in the fridge."},
+  {day:"Friday - Beyond Burgers",color:"#B85220",store:"Already have it",items:["Beyond patties round 3 - last from the box","Gold buns (leftover from pack)"],note:"Full box of 6 done across the week. $20-25 for 3 BBQ nights."},
+  {day:"Costco Run - When You Have Time",color:"#B85220",store:"Costco",items:["Frozen fries large bag","Heavy cream","Butter","Parmesan block","Sour cream","Mayo","BBQ sauce","Olive oil large jug"],note:"Non-perishables only - no bulk proteins."},
+  {day:"Ranch Run - Produce Top-Up",color:"#3A6B42",store:"Ranch Supermarket",items:["Garlic bulbs","Lemons","Tomatoes","Bell peppers","Onions","Sriracha","Sesame oil"],note:"Way cheaper here than Metro or Vince's for produce."},
+];
+
+// STATE
+let state = {dinners:{},items:{}};
+try{ const s=localStorage.getItem('mealplan-v1'); if(s) state=JSON.parse(s); }catch(e){}
+
+function save(){ try{localStorage.setItem('mealplan-v1',JSON.stringify(state));}catch(e){} }
+
+// RENDER DINNERS
+function renderDinners(){
+  const list=document.getElementById('dinner-list');
+  list.innerHTML='';
+  let done=0;
+  DINNERS.forEach(d=>{
+    const isDone=!!state.dinners[d.id];
+    if(isDone) done++;
+    const card=document.createElement('div');
+    card.className='dinner-card'+(isDone?' done':'');
+    card.onclick=()=>{ state.dinners[d.id]=!state.dinners[d.id]; save(); renderDinners(); };
+    let badges='';
+    if(d.bbq&&!isDone) badges+=`<span class="badge badge-bbq">BBQ</span>`;
+    if(d.eatin&&!isDone) badges+=`<span class="badge badge-out">Eat Out</span>`;
+    if(isDone) badges+=`<span class="badge-done">Done</span>`;
+    const effortClass=d.effort==='Easy'?'effort-easy':d.effort==='Medium'?'effort-medium':'effort-zero';
+    card.innerHTML=`
+      <div>
+        <div class="dinner-day" style="${isDone?'color:#9A8E88':''}">${d.day}</div>
+        ${d.date?`<div class="dinner-date">${d.date}</div>`:''}
+      </div>
+      <div>
+        <div class="dinner-meal">${d.meal} ${badges}</div>
+        <div class="dinner-note">${d.note}</div>
+      </div>
+      <span class="effort ${effortClass}">${d.effort}</span>
+    `;
+    list.appendChild(card);
+  });
+  const pct=Math.round((done/DINNERS.length)*100);
+  document.getElementById('progress-text').textContent=`${done} of ${DINNERS.length} nights done`;
+  document.getElementById('progress-pct').textContent=`${pct}%`;
+  document.getElementById('progress-fill').style.width=`${pct}%`;
+}
+
+// RENDER SHOPPING
+function renderShopping(){
+  const list=document.getElementById('shopping-list');
+  list.innerHTML='';
+  SHOPPING_DATA.forEach(store=>{
+    const wrap=document.createElement('div');
+    wrap.style.marginBottom='24px';
+    wrap.innerHTML=`<div class="store-header"><span class="store-tag" style="background:${store.color}">${store.store}</span><span class="store-note">${store.note}</span></div>`;
+    store.cats.forEach(cat=>{
+      if(cat.label){
+        const lbl=document.createElement('p');
+        lbl.className='cat-label';
+        lbl.textContent=cat.label;
+        wrap.appendChild(lbl);
+      }
+      const group=document.createElement('div');
+      group.className='item-group';
+      cat.items.forEach(item=>{
+        const key=`shop-${store.store}-${item}`;
+        const isChecked=!!state.items[key];
+        const row=document.createElement('div');
+        row.className='check-row'+(isChecked?' checked':'');
+        const box=document.createElement('div');
+        box.className='checkbox'+(isChecked?' checked':'');
+        if(isChecked) box.style.background=store.color;
+        const label=document.createElement('span');
+        label.textContent=item;
+        row.appendChild(box);
+        row.appendChild(label);
+        row.onclick=()=>{ state.items[key]=!state.items[key]; save(); renderShopping(); };
+        group.appendChild(row);
+      });
+      wrap.appendChild(group);
+    });
+    list.appendChild(wrap);
+  });
+}
+
+// RENDER DAILY
+function renderDaily(){
+  const list=document.getElementById('daily-list');
+  list.innerHTML='';
+  DAILY_DATA.forEach(d=>{
+    const allDone=d.items.every(item=>state.items[`daily-${d.day}-${item}`]);
+    const card=document.createElement('div');
+    card.className='daily-card'+(d.highlight?' highlight':'');
+    if(d.highlight) card.style.borderColor=d.color;
+    card.innerHTML=`
+      <div class="daily-header" style="background:${d.color}">
+        <div><div class="daily-header-day">${d.day}</div><div class="daily-header-store">${d.store}</div></div>
+        ${allDone?`<span class="daily-done-badge">Done</span>`:''}
+      </div>
+      <div class="daily-body" id="daily-body-${d.day.replace(/\s/g,'_')}"></div>
+    `;
+    list.appendChild(card);
+    const body=card.querySelector('.daily-body');
+    d.items.forEach(item=>{
+      const key=`daily-${d.day}-${item}`;
+      const isChecked=!!state.items[key];
+      const row=document.createElement('div');
+      row.className='check-row'+(isChecked?' checked':'');
+      row.innerHTML=`<div class="checkbox${isChecked?' checked':''}" style="${isChecked?`background:${d.color}`:''}"></div><span>${item}</span>`;
+      row.onclick=()=>{ state.items[key]=!state.items[key]; save(); renderDaily(); };
+      body.appendChild(row);
+    });
+    if(d.note){
+      const note=document.createElement('p');
+      note.className='daily-note';
+      note.textContent=d.note;
+      body.appendChild(note);
+    }
+  });
+}
+
+function resetAll(){ state={dinners:{},items:{}}; save(); renderDinners(); renderShopping(); renderDaily(); }
+
+function showTab(id,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+renderDinners();
+renderShopping();
+renderDaily();
+</script>
+</body>
+</html>
