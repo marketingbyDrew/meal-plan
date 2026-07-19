@@ -170,15 +170,6 @@
     text-decoration:line-through;
     color:var(--text-soft);
   }
-  .cat-label{
-    font-size:12px;
-    font-weight:700;
-    color:var(--accent1);
-    text-transform:uppercase;
-    letter-spacing:0.5px;
-    margin:18px 0 4px;
-  }
-  .cat-label:first-child{margin-top:0;}
   .store-card{
     background:var(--card);
     border:1px solid var(--line);
@@ -224,6 +215,30 @@
     margin-top:20px;
     cursor:pointer;
   }
+  .add-row{display:flex;gap:8px;margin-bottom:10px;}
+  .add-row input[type="text"]{
+    flex:1;background:var(--card-alt);border:1px solid var(--line);border-radius:10px;
+    padding:11px 12px;color:var(--text);font-size:14px;font-family:inherit;
+  }
+  .add-row input[type="number"]{
+    width:88px;background:var(--card-alt);border:1px solid var(--line);border-radius:10px;
+    padding:11px 12px;color:var(--text);font-size:14px;font-family:inherit;
+  }
+  .add-row button{
+    background:var(--accent-grad);border:none;border-radius:10px;padding:0 18px;
+    color:#111;font-weight:700;font-size:14px;cursor:pointer;
+  }
+  .empty-note{font-size:13px;color:var(--text-soft);padding:4px;}
+  .receipt-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:11px 4px;border-bottom:1px solid var(--line);font-size:14px;
+  }
+  .receipt-row:last-child{border-bottom:none;}
+  .receipt-row .rstore{color:var(--text);font-weight:600;}
+  .receipt-row .rdate{color:var(--text-soft);font-size:12px;margin-left:6px;}
+  .receipt-row .ramt{color:var(--text);font-weight:700;margin-left:auto;margin-right:10px;}
+  .receipt-row .rdel{color:var(--text-soft);font-size:13px;cursor:pointer;padding:4px;}
+  .hero-num{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:0.5px;color:var(--text);margin:6px 0 4px;}
 </style>
 </head>
 <body>
@@ -261,43 +276,64 @@
     <div class="store-card" style="border-color:var(--accent1);">
       <div class="store-title">Rough budget</div>
       <div class="store-sub">Everything below, with Ontario tax factored in</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:0.5px;color:var(--text);margin:6px 0 4px;">$100&ndash;$130</div>
+      <div class="hero-num">$100&ndash;$130</div>
       <div style="font-size:12px;color:var(--text-soft);line-height:1.5;">Most of this list (meat, dairy, produce, pasta, condiments) is HST-exempt in Ontario. Only the taxable stuff, pop, chips, ice cream, chocolate, isopropyl, kibble, gets the 13% added. That's a ballpark, actual total moves with what's on sale.</div>
     </div>
+
     <div class="store-card">
       <div class="store-title">Quick add</div>
       <div class="store-sub">Anything last minute goes here, saves as you type</div>
-      <div style="display:flex;gap:8px;margin-bottom:10px;">
-        <input type="text" id="quickAddInput" placeholder="e.g. napkins" style="flex:1;background:var(--card-alt);border:1px solid var(--line);border-radius:10px;padding:11px 12px;color:var(--text);font-size:14px;font-family:inherit;">
-        <button onclick="addQuickItem()" style="background:var(--accent-grad);border:none;border-radius:10px;padding:0 18px;color:#111;font-weight:700;font-size:14px;cursor:pointer;">Add</button>
+      <div class="add-row">
+        <input type="text" id="quickAddInput" placeholder="e.g. napkins">
+        <button onclick="addDynamicItem('quickAdd','quickAddInput')">Add</button>
       </div>
       <div id="quickAddList"></div>
     </div>
+
     <div class="store-card">
       <div class="store-title">Metro re-up</div>
       <div class="store-sub">From wifey's list, before Manti night</div>
       <div id="groceryList"></div>
     </div>
+
     <div class="store-card">
       <div class="store-title">Burger night supplies</div>
       <div class="store-sub">One box covers all three burger nights at 2 patties a night</div>
       <div id="burgerList"></div>
     </div>
+
     <div class="store-card">
       <div class="store-title">For BBQ tofu night</div>
       <div class="store-sub">Only if you don't already have these on hand</div>
       <div id="newDinnerList"></div>
     </div>
+
     <div class="store-card">
       <div class="store-title">Snacks &amp; drinks</div>
       <div class="store-sub">Metro chips $1.49, ice cream $5 pints, French vanilla powder for home coffee</div>
       <div id="snackList"></div>
     </div>
+
     <div class="store-card">
-      <div class="store-title">Needed in general</div>
-      <div class="store-sub">Non-food, whenever you're out</div>
-      <div id="generalList"></div>
+      <div class="store-title">Household Items</div>
+      <div class="store-sub">Add anything as it comes up</div>
+      <div class="add-row">
+        <input type="text" id="householdInput" placeholder="e.g. dish soap">
+        <button onclick="addDynamicItem('household','householdInput')">Add</button>
+      </div>
+      <div id="householdList"></div>
     </div>
+
+    <div class="store-card">
+      <div class="store-title">Herb the Cat 🐱</div>
+      <div class="store-sub">Cat food, 99% isopropyl, and anything else Herb needs</div>
+      <div class="add-row">
+        <input type="text" id="herbInput" placeholder="e.g. litter">
+        <button onclick="addDynamicItem('herb','herbInput')">Add</button>
+      </div>
+      <div id="herbList"></div>
+    </div>
+
     <button class="reset-btn" onclick="resetAll()">Reset all checkmarks</button>
   </section>
 
@@ -305,24 +341,26 @@
     <div class="store-card" style="border-color:var(--accent1);">
       <div class="store-title">Spent so far</div>
       <div class="store-sub">Against the $100&ndash;$130 estimate</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:0.5px;color:var(--text);margin:6px 0 4px;" id="costTotal">$0.00</div>
-      <div class="progress-wrap" style="margin-top:10px;"><div class="progress-bar" id="costBar"></div></div>
-      <div style="font-size:12px;color:var(--text-soft);margin-top:8px;" id="costRemaining"></div>
+      <div class="hero-num" id="spentTotal">$0.00</div>
+      <div class="progress-wrap" style="margin-top:2px;"><div class="progress-bar" id="costBar"></div></div>
+      <div class="store-sub" id="costRemainingLabel" style="margin-top:8px;"></div>
     </div>
+
     <div class="store-card">
       <div class="store-title">Still need</div>
       <div class="store-sub">Everything left unchecked, across all lists</div>
       <div id="stillNeedList"></div>
     </div>
+
     <div class="store-card">
       <div class="store-title">Add a receipt</div>
       <div class="store-sub">Store and amount, saves automatically</div>
-      <div style="display:flex;gap:8px;margin-bottom:10px;">
-        <input type="text" id="costStoreInput" placeholder="Store" style="flex:1;background:var(--card-alt);border:1px solid var(--line);border-radius:10px;padding:11px 12px;color:var(--text);font-size:14px;font-family:inherit;">
-        <input type="number" id="costAmountInput" placeholder="$0.00" step="0.01" style="width:100px;background:var(--card-alt);border:1px solid var(--line);border-radius:10px;padding:11px 12px;color:var(--text);font-size:14px;font-family:inherit;">
-        <button onclick="addPurchase()" style="background:var(--accent-grad);border:none;border-radius:10px;padding:0 18px;color:#111;font-weight:700;font-size:14px;cursor:pointer;">Add</button>
+      <div class="add-row">
+        <input type="text" id="receiptStoreInput" placeholder="Store">
+        <input type="number" id="receiptAmountInput" placeholder="$0.00" step="0.01" min="0">
+        <button onclick="addReceipt()">Add</button>
       </div>
-      <div id="purchaseList"></div>
+      <div id="receiptList"></div>
     </div>
   </section>
 
@@ -338,8 +376,8 @@
 
 <script>
 const dinners = [
-  {id:'sat', day:'Saturday', date:'Jul 18', name:'Manti (Turkish)', note:'Ecem is making it tonight &mdash; pasta, ground beef, garlic, tomato, yogurt sauce.', badge:'Manti', cls:'manti'},
-  {id:'sun', day:'Sunday', date:'Jul 19', name:'BBQ Beyond Burgers', note:'Gold buns, your usual toppings, fries on the side. One box of patties covers all three burger nights this week.', badge:'BBQ', cls:''},
+  {id:'sat', day:'Saturday', date:'Jul 18', name:'BBQ Beyond Burgers', note:'Gold buns, your usual toppings, fries on the side. One box of patties covers all three burger nights this week.', badge:'BBQ', cls:''},
+  {id:'sun', day:'Sunday', date:'Jul 19', name:'Manti (Turkish)', note:'Ecem is making it &mdash; pasta, ground beef, garlic, tomato, yogurt sauce.', badge:'Manti', cls:'manti'},
   {id:'mon', day:'Monday', date:'Jul 20', name:'BBQ Beyond Burgers', note:'Second round, fries on the side, same box of patties.', badge:'BBQ', cls:''},
   {id:'tue', day:'Tuesday', date:'Jul 21', name:'Ghost Taco Tuesday', note:'Order-out deal. Zero cooking.', badge:'Order out', cls:'taco'},
   {id:'wed', day:'Wednesday', date:'Jul 22', name:'Grilled BBQ Tofu', note:'Buddhist Chef marinade: soy sauce, maple syrup, vegan Worcestershire, olive oil, lime, onion powder, garlic powder, smoked paprika. Marinate at least 1 hr, 2 min a side on the grill. Sides: zucchini, corn, radishes.', badge:'Marinate ahead', cls:''},
@@ -351,29 +389,45 @@ const groceryList = ['Tomato','Yogurt','Garlic','Pasta','Ground beef','Diet Coke
 const burgerList = ['Beyond Burger patties (1 box &mdash; covers all 3 burger nights at 2/night)','Gold buns (1 pack)','Frozen fries (1&ndash;2 bags, Metro, ~$3 each depending on freezer space)'];
 const newDinnerList = ['Maple syrup','Vegan Worcestershire sauce','Lime','Zucchini','Corn','Radishes (or swap for another grill veg)'];
 const snackList = ['Metro-brand chips, $1.49 (2 bags)','Ice cream, ~$5 pints (2 small)','French vanilla cappuccino powder (Bulk Barn)','1 fruit for wifey (whatever\'s fresh/on sale)','Yogurt cups, multipack (wifey)','Metro-brand chocolate bar (1-2, wifey)'];
-const generalList = ['Isopropyl alcohol (not rubbing)','Herb kibble'];
 
-let state = JSON.parse(localStorage.getItem('mealPlanState') || '{"dinners":{},"items":{},"quickAdd":[],"purchases":[]}');
-if(!state.quickAdd) state.quickAdd = [];
-if(!state.purchases) state.purchases = [];
+// static checklists keyed by prefix, used to compute "Still need" on the Cost tab
+const staticLists = {
+  grocery: groceryList,
+  burger: burgerList,
+  newdinner: newDinnerList,
+  snack: snackList,
+};
+
+const defaultState = {
+  dinners:{},
+  items:{},
+  lists:{
+    quickAdd:[],
+    household:[{text:'Isopropyl alcohol, 99%',done:false}],
+    herb:[{text:'Cat food',done:false}]
+  },
+  receipts:[]
+};
+
+let state = JSON.parse(localStorage.getItem('mealPlanState') || JSON.stringify(defaultState));
+// backfill any missing fields for people with older saved state, without wiping what's there
+if(!state.lists) state.lists = {};
+if(!state.lists.quickAdd) state.lists.quickAdd = (Array.isArray(state.quickAdd) ? state.quickAdd : []);
+if(!state.lists.household) state.lists.household = [{text:'Isopropyl alcohol, 99%',done:false}];
+if(!state.lists.herb) state.lists.herb = [{text:'Cat food',done:false}];
+if(!state.receipts) state.receipts = [];
+delete state.quickAdd;
+
+// one-time fix: isopropyl was mistakenly seeded under Herb, move it to Household if it's still sitting there
+const isoIndex = state.lists.herb.findIndex(item => item.text.toLowerCase().includes('isopropyl'));
+if(isoIndex !== -1){
+  const [isoItem] = state.lists.herb.splice(isoIndex, 1);
+  if(!state.lists.household.some(item => item.text.toLowerCase().includes('isopropyl'))){
+    state.lists.household.push(isoItem);
+  }
+}
 
 function save(){ localStorage.setItem('mealPlanState', JSON.stringify(state)); }
-
-if(!state.seededReceiptsJul18){
-  state.purchases.push({store:'Metro', amount:100.12, date:'Jul 18'});
-  state.purchases.push({store:"Vince's Market", amount:8.95, date:'Jul 18'});
-  const autoCheck = {
-    grocery: ['Tomato','Yogurt','Pasta','Ground beef','Diet Coke','Margarine','Mayo'],
-    burger: ['Beyond Burger patties (1 box &mdash; covers all 3 burger nights at 2/night)'],
-    newdinner: ['Lime','Zucchini'],
-    snack: ['Ice cream, ~$5 pints (2 small)','Yogurt cups, multipack (wifey)']
-  };
-  Object.keys(autoCheck).forEach(prefix => {
-    autoCheck[prefix].forEach(item => { state.items[prefix+'-'+item] = true; });
-  });
-  state.seededReceiptsJul18 = true;
-  save();
-}
 
 function renderDinners(){
   const list = document.getElementById('dinnerList');
@@ -414,57 +468,55 @@ function renderChecklist(containerId, items, prefix){
     label.textContent = item;
     row.appendChild(box);
     row.appendChild(label);
-    row.onclick = () => { state.items[key] = !state.items[key]; save(); renderChecklist(containerId, items, prefix); };
+    row.onclick = () => { state.items[key] = !state.items[key]; save(); renderChecklist(containerId, items, prefix); renderCost(); };
     container.appendChild(row);
   });
 }
 
-const shoppingSources = [
-  {list: groceryList, prefix: 'grocery'},
-  {list: burgerList, prefix: 'burger'},
-  {list: newDinnerList, prefix: 'newdinner'},
-  {list: snackList, prefix: 'snack'},
-  {list: generalList, prefix: 'general'}
-];
-
-function renderStillNeed(){
-  const container = document.getElementById('stillNeedList');
+function renderDynamicList(listKey, containerId){
+  const container = document.getElementById(containerId);
   container.innerHTML = '';
-  const items = [];
-  shoppingSources.forEach(src => {
-    src.list.forEach(item => {
-      const key = src.prefix + '-' + item;
-      if(!state.items[key]) items.push({label:item, key:key});
-    });
-  });
-  state.quickAdd.forEach((qa, i) => {
-    if(!qa.done) items.push({label:qa.text, quickIndex:i});
-  });
-  items.forEach(it => {
+  const arr = state.lists[listKey];
+  arr.forEach((item, i) => {
     const row = document.createElement('div');
-    row.className = 'check-row';
+    row.className = 'check-row' + (item.done ? ' checked' : '');
     const box = document.createElement('div');
-    box.className = 'checkbox';
+    box.className = 'checkbox' + (item.done ? ' checked' : '');
+    const toggle = () => { state.lists[listKey][i].done = !state.lists[listKey][i].done; save(); renderDynamicList(listKey, containerId); renderCost(); };
+    box.onclick = toggle;
     const label = document.createElement('span');
-    label.textContent = it.label;
+    label.textContent = item.text;
+    label.style.flex = '1';
+    label.onclick = toggle;
+    const del = document.createElement('span');
+    del.textContent = '✕';
+    del.style.color = 'var(--text-soft)';
+    del.style.fontSize = '13px';
+    del.style.padding = '4px 6px';
+    del.onclick = (e) => { e.stopPropagation(); state.lists[listKey].splice(i,1); save(); renderDynamicList(listKey, containerId); renderCost(); };
     row.appendChild(box);
     row.appendChild(label);
-    row.onclick = () => {
-      if(it.key !== undefined){ state.items[it.key] = true; }
-      else { state.quickAdd[it.quickIndex].done = true; }
-      save();
-      renderAllShopping();
-    };
+    row.appendChild(del);
     container.appendChild(row);
   });
-  if(items.length === 0){
+  if(arr.length === 0){
     const empty = document.createElement('div');
-    empty.style.fontSize = '13px';
-    empty.style.color = 'var(--text-soft)';
-    empty.style.padding = '4px';
-    empty.textContent = "Everything's checked off.";
+    empty.className = 'empty-note';
+    empty.textContent = 'Nothing added yet.';
     container.appendChild(empty);
   }
+}
+
+function addDynamicItem(listKey, inputId){
+  const input = document.getElementById(inputId);
+  const text = input.value.trim();
+  if(!text) return;
+  state.lists[listKey].push({text:text, done:false});
+  input.value = '';
+  save();
+  const containerMap = {quickAdd:'quickAddList', household:'householdList', herb:'herbList'};
+  renderDynamicList(listKey, containerMap[listKey]);
+  renderCost();
 }
 
 function renderAllShopping(){
@@ -472,125 +524,85 @@ function renderAllShopping(){
   renderChecklist('burgerList', burgerList, 'burger');
   renderChecklist('newDinnerList', newDinnerList, 'newdinner');
   renderChecklist('snackList', snackList, 'snack');
-  renderChecklist('generalList', generalList, 'general');
-  renderQuickAdd();
-  renderStillNeed();
+  renderDynamicList('quickAdd', 'quickAddList');
+  renderDynamicList('household', 'householdList');
+  renderDynamicList('herb', 'herbList');
 }
 
-function addQuickItem(){
-  const input = document.getElementById('quickAddInput');
-  const text = input.value.trim();
-  if(!text) return;
-  state.quickAdd.push({text:text, done:false});
-  input.value = '';
-  save();
-  renderQuickAdd();
-  renderStillNeed();
-}
-
-function renderQuickAdd(){
-  const container = document.getElementById('quickAddList');
-  container.innerHTML = '';
-  state.quickAdd.forEach((item, i) => {
-    const row = document.createElement('div');
-    row.className = 'check-row' + (item.done ? ' checked' : '');
-    const box = document.createElement('div');
-    box.className = 'checkbox' + (item.done ? ' checked' : '');
-    box.onclick = () => { state.quickAdd[i].done = !state.quickAdd[i].done; save(); renderQuickAdd(); renderStillNeed(); };
-    const label = document.createElement('span');
-    label.textContent = item.text;
-    label.style.flex = '1';
-    label.onclick = () => { state.quickAdd[i].done = !state.quickAdd[i].done; save(); renderQuickAdd(); renderStillNeed(); };
-    const del = document.createElement('span');
-    del.textContent = '✕';
-    del.style.color = 'var(--text-soft)';
-    del.style.fontSize = '13px';
-    del.style.padding = '4px 6px';
-    del.onclick = (e) => { e.stopPropagation(); state.quickAdd.splice(i,1); save(); renderQuickAdd(); renderStillNeed(); };
-    row.appendChild(box);
-    row.appendChild(label);
-    row.appendChild(del);
-    container.appendChild(row);
-  });
-  if(state.quickAdd.length === 0){
-    const empty = document.createElement('div');
-    empty.style.fontSize = '13px';
-    empty.style.color = 'var(--text-soft)';
-    empty.style.padding = '4px';
-    empty.textContent = 'Nothing added yet.';
-    container.appendChild(empty);
-  }
-}
-
-const quickAddInputEl = document.getElementById('quickAddInput');
-if(quickAddInputEl){
-  quickAddInputEl.addEventListener('keydown', (e) => {
-    if(e.key === 'Enter') addQuickItem();
-  });
-}
-
-const costAmountInputEl = document.getElementById('costAmountInput');
-if(costAmountInputEl){
-  costAmountInputEl.addEventListener('keydown', (e) => {
-    if(e.key === 'Enter') addPurchase();
-  });
-}
-
-function renderCost(){
-  const total = state.purchases.reduce((s,p)=>s+p.amount,0);
-  document.getElementById('costTotal').textContent = '$' + total.toFixed(2);
-  const pct = Math.min(total/130*100, 100);
-  document.getElementById('costBar').style.width = pct + '%';
-  const remaining = 130 - total;
-  document.getElementById('costRemaining').textContent = remaining >= 0
-    ? ('$' + remaining.toFixed(2) + ' left before you hit the top of the estimate')
-    : ('$' + Math.abs(remaining).toFixed(2) + ' over the $130 estimate');
-  const list = document.getElementById('purchaseList');
-  list.innerHTML = '';
-  state.purchases.forEach((p, i) => {
-    const row = document.createElement('div');
-    row.className = 'check-row';
-    row.style.cursor = 'default';
-    const label = document.createElement('span');
-    label.style.flex = '1';
-    label.textContent = p.store + (p.date ? ' \u00b7 ' + p.date : '');
-    const amt = document.createElement('span');
-    amt.style.fontWeight = '700';
-    amt.style.marginRight = '10px';
-    amt.textContent = '$' + p.amount.toFixed(2);
-    const del = document.createElement('span');
-    del.textContent = '\u2715';
-    del.style.color = 'var(--text-soft)';
-    del.style.fontSize = '13px';
-    del.style.padding = '4px 6px';
-    del.style.cursor = 'pointer';
-    del.onclick = () => { state.purchases.splice(i,1); save(); renderCost(); };
-    row.appendChild(label);
-    row.appendChild(amt);
-    row.appendChild(del);
-    list.appendChild(row);
-  });
-  if(state.purchases.length === 0){
-    const empty = document.createElement('div');
-    empty.style.fontSize = '13px';
-    empty.style.color = 'var(--text-soft)';
-    empty.style.padding = '4px';
-    empty.textContent = 'Nothing logged yet.';
-    list.appendChild(empty);
-  }
-}
-
-function addPurchase(){
-  const storeInput = document.getElementById('costStoreInput');
-  const amountInput = document.getElementById('costAmountInput');
+function addReceipt(){
+  const storeInput = document.getElementById('receiptStoreInput');
+  const amountInput = document.getElementById('receiptAmountInput');
   const store = storeInput.value.trim();
   const amount = parseFloat(amountInput.value);
-  if(!store || isNaN(amount)) return;
-  state.purchases.push({store:store, amount:amount, date:''});
+  if(!store || isNaN(amount) || amount <= 0) return;
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+  state.receipts.push({store:store, amount:amount, date:dateStr});
   storeInput.value = '';
   amountInput.value = '';
   save();
   renderCost();
+}
+
+function renderCost(){
+  const total = state.receipts.reduce((sum, r) => sum + r.amount, 0);
+  document.getElementById('spentTotal').textContent = '$' + total.toFixed(2);
+  const cap = 130;
+  const pct = Math.min(100, (total / cap) * 100);
+  document.getElementById('costBar').style.width = pct + '%';
+  const remainLabel = document.getElementById('costRemainingLabel');
+  if(total <= cap){
+    remainLabel.textContent = '$' + (cap - total).toFixed(2) + ' left before you hit the top of the estimate';
+  } else {
+    remainLabel.textContent = '$' + (total - cap).toFixed(2) + ' over the top of the estimate';
+  }
+
+  // Still need: unchecked items across static lists + not-done items in household/herb
+  const stillNeed = document.getElementById('stillNeedList');
+  stillNeed.innerHTML = '';
+  const missing = [];
+  Object.keys(staticLists).forEach(prefix => {
+    staticLists[prefix].forEach(item => {
+      if(!state.items[prefix + '-' + item]) missing.push(item);
+    });
+  });
+  ['household','herb'].forEach(listKey => {
+    state.lists[listKey].forEach(item => {
+      if(!item.done) missing.push(item.text);
+    });
+  });
+  if(missing.length === 0){
+    const empty = document.createElement('div');
+    empty.className = 'empty-note';
+    empty.textContent = 'Everything is checked off.';
+    stillNeed.appendChild(empty);
+  } else {
+    missing.forEach(text => {
+      const row = document.createElement('div');
+      row.className = 'check-row';
+      row.style.cursor = 'default';
+      row.innerHTML = `<div class="checkbox"></div><span>${text}</span>`;
+      stillNeed.appendChild(row);
+    });
+  }
+
+  // Receipt list
+  const receiptList = document.getElementById('receiptList');
+  receiptList.innerHTML = '';
+  state.receipts.forEach((r, i) => {
+    const row = document.createElement('div');
+    row.className = 'receipt-row';
+    row.innerHTML = `
+      <span><span class="rstore">${r.store}</span><span class="rdate">&middot; ${r.date}</span></span>
+      <span class="ramt">$${r.amount.toFixed(2)}</span>
+    `;
+    const del = document.createElement('span');
+    del.className = 'rdel';
+    del.textContent = '✕';
+    del.onclick = () => { state.receipts.splice(i,1); save(); renderCost(); };
+    row.appendChild(del);
+    receiptList.appendChild(row);
+  });
 }
 
 function resetAll(){
@@ -599,6 +611,7 @@ function resetAll(){
   save();
   renderDinners();
   renderAllShopping();
+  renderCost();
 }
 
 function showTab(id, btn){
@@ -608,6 +621,14 @@ function showTab(id, btn){
   btn.classList.add('active');
   window.scrollTo({top:0, behavior:'smooth'});
 }
+
+['quickAddInput','householdInput','herbInput'].forEach(id => {
+  const el = document.getElementById(id);
+  const map = {quickAddInput:'quickAdd', householdInput:'household', herbInput:'herb'};
+  el.addEventListener('keydown', (e) => { if(e.key === 'Enter') addDynamicItem(map[id], id); });
+});
+document.getElementById('receiptAmountInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') addReceipt(); });
+document.getElementById('receiptStoreInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') addReceipt(); });
 
 renderDinners();
 renderAllShopping();
