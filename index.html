@@ -239,6 +239,7 @@
   <button class="active" onclick="showTab('week',this)">This Week</button>
   <button onclick="showTab('lunches',this)">Lunches</button>
   <button onclick="showTab('shopping',this)">Shopping</button>
+  <button onclick="showTab('cost',this)">Cost</button>
   <button onclick="showTab('tips',this)">Tips</button>
 </nav>
 
@@ -300,6 +301,31 @@
     <button class="reset-btn" onclick="resetAll()">Reset all checkmarks</button>
   </section>
 
+  <section id="cost" class="section">
+    <div class="store-card" style="border-color:var(--accent1);">
+      <div class="store-title">Spent so far</div>
+      <div class="store-sub">Against the $100&ndash;$130 estimate</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:0.5px;color:var(--text);margin:6px 0 4px;" id="costTotal">$0.00</div>
+      <div class="progress-wrap" style="margin-top:10px;"><div class="progress-bar" id="costBar"></div></div>
+      <div style="font-size:12px;color:var(--text-soft);margin-top:8px;" id="costRemaining"></div>
+    </div>
+    <div class="store-card">
+      <div class="store-title">Still need</div>
+      <div class="store-sub">Everything left unchecked, across all lists</div>
+      <div id="stillNeedList"></div>
+    </div>
+    <div class="store-card">
+      <div class="store-title">Add a receipt</div>
+      <div class="store-sub">Store and amount, saves automatically</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <input type="text" id="costStoreInput" placeholder="Store" style="flex:1;background:var(--card-alt);border:1px solid var(--line);border-radius:10px;padding:11px 12px;color:var(--text);font-size:14px;font-family:inherit;">
+        <input type="number" id="costAmountInput" placeholder="$0.00" step="0.01" style="width:100px;background:var(--card-alt);border:1px solid var(--line);border-radius:10px;padding:11px 12px;color:var(--text);font-size:14px;font-family:inherit;">
+        <button onclick="addPurchase()" style="background:var(--accent-grad);border:none;border-radius:10px;padding:0 18px;color:#111;font-weight:700;font-size:14px;cursor:pointer;">Add</button>
+      </div>
+      <div id="purchaseList"></div>
+    </div>
+  </section>
+
   <section id="tips" class="section">
     <div class="tip"><b>Marinate the tofu the night before or morning of.</b> At least 1 hour, but overnight in the fridge gets more flavour in. Drain before it hits the grill.</div>
     <div class="tip"><b>One box covers all three burger nights.</b> Two patties a night &times; three nights = six, exactly one box, no need for a second.</div>
@@ -327,10 +353,27 @@ const newDinnerList = ['Maple syrup','Vegan Worcestershire sauce','Lime','Zucchi
 const snackList = ['Metro-brand chips, $1.49 (2 bags)','Ice cream, ~$5 pints (2 small)','French vanilla cappuccino powder (Bulk Barn)','1 fruit for wifey (whatever\'s fresh/on sale)','Yogurt cups, multipack (wifey)','Metro-brand chocolate bar (1-2, wifey)'];
 const generalList = ['Isopropyl alcohol (not rubbing)','Herb kibble'];
 
-let state = JSON.parse(localStorage.getItem('mealPlanState') || '{"dinners":{},"items":{},"quickAdd":[]}');
+let state = JSON.parse(localStorage.getItem('mealPlanState') || '{"dinners":{},"items":{},"quickAdd":[],"purchases":[]}');
 if(!state.quickAdd) state.quickAdd = [];
+if(!state.purchases) state.purchases = [];
 
 function save(){ localStorage.setItem('mealPlanState', JSON.stringify(state)); }
+
+if(!state.seededReceiptsJul18){
+  state.purchases.push({store:'Metro', amount:100.12, date:'Jul 18'});
+  state.purchases.push({store:"Vince's Market", amount:8.95, date:'Jul 18'});
+  const autoCheck = {
+    grocery: ['Tomato','Yogurt','Pasta','Ground beef','Diet Coke','Margarine','Mayo'],
+    burger: ['Beyond Burger patties (1 box &mdash; covers all 3 burger nights at 2/night)'],
+    newdinner: ['Lime','Zucchini'],
+    snack: ['Ice cream, ~$5 pints (2 small)','Yogurt cups, multipack (wifey)']
+  };
+  Object.keys(autoCheck).forEach(prefix => {
+    autoCheck[prefix].forEach(item => { state.items[prefix+'-'+item] = true; });
+  });
+  state.seededReceiptsJul18 = true;
+  save();
+}
 
 function renderDinners(){
   const list = document.getElementById('dinnerList');
@@ -376,6 +419,54 @@ function renderChecklist(containerId, items, prefix){
   });
 }
 
+const shoppingSources = [
+  {list: groceryList, prefix: 'grocery'},
+  {list: burgerList, prefix: 'burger'},
+  {list: newDinnerList, prefix: 'newdinner'},
+  {list: snackList, prefix: 'snack'},
+  {list: generalList, prefix: 'general'}
+];
+
+function renderStillNeed(){
+  const container = document.getElementById('stillNeedList');
+  container.innerHTML = '';
+  const items = [];
+  shoppingSources.forEach(src => {
+    src.list.forEach(item => {
+      const key = src.prefix + '-' + item;
+      if(!state.items[key]) items.push({label:item, key:key});
+    });
+  });
+  state.quickAdd.forEach((qa, i) => {
+    if(!qa.done) items.push({label:qa.text, quickIndex:i});
+  });
+  items.forEach(it => {
+    const row = document.createElement('div');
+    row.className = 'check-row';
+    const box = document.createElement('div');
+    box.className = 'checkbox';
+    const label = document.createElement('span');
+    label.textContent = it.label;
+    row.appendChild(box);
+    row.appendChild(label);
+    row.onclick = () => {
+      if(it.key !== undefined){ state.items[it.key] = true; }
+      else { state.quickAdd[it.quickIndex].done = true; }
+      save();
+      renderAllShopping();
+    };
+    container.appendChild(row);
+  });
+  if(items.length === 0){
+    const empty = document.createElement('div');
+    empty.style.fontSize = '13px';
+    empty.style.color = 'var(--text-soft)';
+    empty.style.padding = '4px';
+    empty.textContent = "Everything's checked off.";
+    container.appendChild(empty);
+  }
+}
+
 function renderAllShopping(){
   renderChecklist('groceryList', groceryList, 'grocery');
   renderChecklist('burgerList', burgerList, 'burger');
@@ -383,6 +474,7 @@ function renderAllShopping(){
   renderChecklist('snackList', snackList, 'snack');
   renderChecklist('generalList', generalList, 'general');
   renderQuickAdd();
+  renderStillNeed();
 }
 
 function addQuickItem(){
@@ -393,6 +485,7 @@ function addQuickItem(){
   input.value = '';
   save();
   renderQuickAdd();
+  renderStillNeed();
 }
 
 function renderQuickAdd(){
@@ -403,17 +496,17 @@ function renderQuickAdd(){
     row.className = 'check-row' + (item.done ? ' checked' : '');
     const box = document.createElement('div');
     box.className = 'checkbox' + (item.done ? ' checked' : '');
-    box.onclick = () => { state.quickAdd[i].done = !state.quickAdd[i].done; save(); renderQuickAdd(); };
+    box.onclick = () => { state.quickAdd[i].done = !state.quickAdd[i].done; save(); renderQuickAdd(); renderStillNeed(); };
     const label = document.createElement('span');
     label.textContent = item.text;
     label.style.flex = '1';
-    label.onclick = () => { state.quickAdd[i].done = !state.quickAdd[i].done; save(); renderQuickAdd(); };
+    label.onclick = () => { state.quickAdd[i].done = !state.quickAdd[i].done; save(); renderQuickAdd(); renderStillNeed(); };
     const del = document.createElement('span');
     del.textContent = '✕';
     del.style.color = 'var(--text-soft)';
     del.style.fontSize = '13px';
     del.style.padding = '4px 6px';
-    del.onclick = (e) => { e.stopPropagation(); state.quickAdd.splice(i,1); save(); renderQuickAdd(); };
+    del.onclick = (e) => { e.stopPropagation(); state.quickAdd.splice(i,1); save(); renderQuickAdd(); renderStillNeed(); };
     row.appendChild(box);
     row.appendChild(label);
     row.appendChild(del);
@@ -436,6 +529,70 @@ if(quickAddInputEl){
   });
 }
 
+const costAmountInputEl = document.getElementById('costAmountInput');
+if(costAmountInputEl){
+  costAmountInputEl.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') addPurchase();
+  });
+}
+
+function renderCost(){
+  const total = state.purchases.reduce((s,p)=>s+p.amount,0);
+  document.getElementById('costTotal').textContent = '$' + total.toFixed(2);
+  const pct = Math.min(total/130*100, 100);
+  document.getElementById('costBar').style.width = pct + '%';
+  const remaining = 130 - total;
+  document.getElementById('costRemaining').textContent = remaining >= 0
+    ? ('$' + remaining.toFixed(2) + ' left before you hit the top of the estimate')
+    : ('$' + Math.abs(remaining).toFixed(2) + ' over the $130 estimate');
+  const list = document.getElementById('purchaseList');
+  list.innerHTML = '';
+  state.purchases.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'check-row';
+    row.style.cursor = 'default';
+    const label = document.createElement('span');
+    label.style.flex = '1';
+    label.textContent = p.store + (p.date ? ' \u00b7 ' + p.date : '');
+    const amt = document.createElement('span');
+    amt.style.fontWeight = '700';
+    amt.style.marginRight = '10px';
+    amt.textContent = '$' + p.amount.toFixed(2);
+    const del = document.createElement('span');
+    del.textContent = '\u2715';
+    del.style.color = 'var(--text-soft)';
+    del.style.fontSize = '13px';
+    del.style.padding = '4px 6px';
+    del.style.cursor = 'pointer';
+    del.onclick = () => { state.purchases.splice(i,1); save(); renderCost(); };
+    row.appendChild(label);
+    row.appendChild(amt);
+    row.appendChild(del);
+    list.appendChild(row);
+  });
+  if(state.purchases.length === 0){
+    const empty = document.createElement('div');
+    empty.style.fontSize = '13px';
+    empty.style.color = 'var(--text-soft)';
+    empty.style.padding = '4px';
+    empty.textContent = 'Nothing logged yet.';
+    list.appendChild(empty);
+  }
+}
+
+function addPurchase(){
+  const storeInput = document.getElementById('costStoreInput');
+  const amountInput = document.getElementById('costAmountInput');
+  const store = storeInput.value.trim();
+  const amount = parseFloat(amountInput.value);
+  if(!store || isNaN(amount)) return;
+  state.purchases.push({store:store, amount:amount, date:''});
+  storeInput.value = '';
+  amountInput.value = '';
+  save();
+  renderCost();
+}
+
 function resetAll(){
   state.dinners = {};
   state.items = {};
@@ -454,6 +611,7 @@ function showTab(id, btn){
 
 renderDinners();
 renderAllShopping();
+renderCost();
 </script>
 
 </body>
