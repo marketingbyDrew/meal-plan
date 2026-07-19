@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>This Week's Eats</title>
+<title>Drew, Gemmy & Herby's HQ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -244,7 +244,7 @@
 <body>
 
 <header>
-  <h1>This Week's Eats</h1>
+  <h1>Drew, Gemmy &amp; Herby's HQ</h1>
   <div class="sub">Sat Jul 18 &ndash; Fri Jul 24</div>
   <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
   <div class="progress-label" id="progressLabel">0 of 7 dinners done</div>
@@ -385,10 +385,38 @@ const dinners = [
   {id:'fri', day:'Friday', date:'Jul 24', name:'Flex / Leftovers', note:'Quesadillas, leftovers, or whatever needs using up before the weekend.', badge:'Flex', cls:''},
 ];
 
-const groceryList = ['Tomato','Yogurt','Garlic','Pasta','Ground beef','Diet Coke','Margarine','Mayo','Pickles'];
-const burgerList = ['Beyond Burger patties (1 box &mdash; covers all 3 burger nights at 2/night)','Gold buns (1 pack)','Frozen fries (1&ndash;2 bags, Metro, ~$3 each depending on freezer space)'];
-const newDinnerList = ['Maple syrup','Vegan Worcestershire sauce','Lime','Zucchini','Corn','Radishes (or swap for another grill veg)'];
-const snackList = ['Metro-brand chips, $1.49 (2 bags)','Ice cream, ~$5 pints (2 small)','French vanilla cappuccino powder (Bulk Barn)','1 fruit for wifey (whatever\'s fresh/on sale)','Yogurt cups, multipack (wifey)','Metro-brand chocolate bar (1-2, wifey)'];
+const groceryList = [
+  {id:'tomato', text:'Tomato'},
+  {id:'yogurt', text:'Yogurt'},
+  {id:'garlic', text:'Garlic'},
+  {id:'pasta', text:'Pasta'},
+  {id:'groundbeef', text:'Ground beef'},
+  {id:'dietcoke', text:'Diet Coke'},
+  {id:'margarine', text:'Margarine'},
+  {id:'mayo', text:'Mayo'},
+  {id:'pickles', text:'Pickles'},
+];
+const burgerList = [
+  {id:'patties', text:'Beyond Burger patties (1 box &mdash; covers all 3 burger nights at 2/night)'},
+  {id:'buns', text:'Gold buns (1 pack)'},
+  {id:'fries', text:'Frozen fries (1&ndash;2 bags, Metro, ~$3 each depending on freezer space)'},
+];
+const newDinnerList = [
+  {id:'maplesyrup', text:'Maple syrup'},
+  {id:'worcestershire', text:'Vegan Worcestershire sauce'},
+  {id:'lime', text:'Lime'},
+  {id:'zucchini', text:'Zucchini'},
+  {id:'corn', text:'Corn'},
+  {id:'radishes', text:'Radishes (or swap for another grill veg)'},
+];
+const snackList = [
+  {id:'chips', text:'Metro-brand chips, $1.49 (2 bags)'},
+  {id:'icecream', text:'Ice cream, ~$5 pints (2 small)'},
+  {id:'vanillapowder', text:'French vanilla cappuccino powder (Bulk Barn)'},
+  {id:'fruit', text:'1 fruit for wifey (whatever\'s fresh/on sale)'},
+  {id:'yogurtcups', text:'Yogurt cups, multipack (wifey)'},
+  {id:'chocolate', text:'Metro-brand chocolate bar (1-2, wifey)'},
+];
 
 // static checklists keyed by prefix, used to compute "Still need" on the Cost tab
 const staticLists = {
@@ -416,6 +444,13 @@ if(!state.lists.quickAdd) state.lists.quickAdd = (Array.isArray(state.quickAdd) 
 if(!state.lists.household) state.lists.household = [{text:'Isopropyl alcohol, 99%',done:false}];
 if(!state.lists.herb) state.lists.herb = [{text:'Cat food',done:false}];
 if(!state.receipts) state.receipts = [];
+// recovery: if receipts came back empty, restore the two known entries from before this update
+if(state.receipts.length === 0){
+  state.receipts = [
+    {store:'Metro', amount:100.12, date:'Jul 18'},
+    {store:"Vince's Market", amount:8.95, date:'Jul 18'}
+  ];
+}
 delete state.quickAdd;
 
 // one-time fix: isopropyl was mistakenly seeded under Herb, move it to Household if it's still sitting there
@@ -458,14 +493,14 @@ function renderChecklist(containerId, items, prefix){
   const container = document.getElementById(containerId);
   container.innerHTML = '';
   items.forEach(item => {
-    const key = prefix + '-' + item;
+    const key = prefix + '-' + item.id;
     const isChecked = !!state.items[key];
     const row = document.createElement('div');
     row.className = 'check-row' + (isChecked ? ' checked' : '');
     const box = document.createElement('div');
     box.className = 'checkbox' + (isChecked ? ' checked' : '');
     const label = document.createElement('span');
-    label.textContent = item;
+    label.innerHTML = item.text;
     row.appendChild(box);
     row.appendChild(label);
     row.onclick = () => { state.items[key] = !state.items[key]; save(); renderChecklist(containerId, items, prefix); renderCost(); };
@@ -563,7 +598,7 @@ function renderCost(){
   const missing = [];
   Object.keys(staticLists).forEach(prefix => {
     staticLists[prefix].forEach(item => {
-      if(!state.items[prefix + '-' + item]) missing.push(item);
+      if(!state.items[prefix + '-' + item.id]) missing.push(item.text);
     });
   });
   ['household','herb'].forEach(listKey => {
